@@ -1,0 +1,152 @@
+Sub stock()
+    'declare worksheet
+    Dim ws As Worksheet
+    
+    ' Set an initial variable for holding the stock name
+    Dim Stock_Name As String
+    
+    ' Set an initial variable for holding the total per stock
+    Dim Stock_Total As Double
+    
+    ' Declare i
+    Dim i As Double
+      
+    ' last row
+    Dim LastRow As Double
+    
+    ' Keep track of the location for each stock in the summary table
+    Dim Summary_Table_Row As Integer
+    
+    'Open and close prices
+    Dim openprice As Double
+    Dim closeprice As Double
+    Dim yearlychange As Double
+    Dim percentchange As Double
+    
+    'greatest increase, decrease, volumn
+    Dim greatest_increase, greatest_decrease, greatest_total As Double
+    Dim greatest_increase_row As Integer
+    Dim greatest_decrease_row As Integer
+    Dim greatest_total_row As Integer
+    
+    
+    
+    ' --------------------------------------------
+    ' LOOP THROUGH ALL SHEETS
+    ' --------------------------------------------
+    For Each ws In Worksheets
+    
+        'fill in the headers
+        ws.Cells(1, 9).Value = "Ticker"
+        ws.Cells(1, 10).Value = "Yearly Change"
+        ws.Cells(1, 11).Value = "Percent Change"
+        ws.Cells(1, 12).Value = "Total Stock Volumn"
+        ws.Cells(1, 16).Value = "Ticker"
+        ws.Cells(1, 17).Value = "Value"
+        ws.Cells(2, 15).Value = "Greatest % Increase"
+        ws.Cells(3, 15).Value = "Greatest % Decrease"
+        ws.Cells(4, 15).Value = "Greatest Total Volumn"
+        
+        'init total
+        Stock_Total = 0
+        LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+    
+        Summary_Table_Row = 2
+      
+        'Open/close prices
+        openprice = ws.Cells(2, 3).Value
+      
+    
+        'Loop through all stock purchases
+        For i = 2 To LastRow
+      
+        ' Add to the Stock Total
+        Stock_Total = Stock_Total + ws.Cells(i, 7).Value
+        
+        ' Check if we are still within the same stock ticker, if it is not...
+        If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+        
+            'Grab the closing price
+            closeprice = ws.Cells(i, 6).Value
+            
+            'Yearly change
+            yearlychange = closeprice - openprice
+            
+            'percentage change
+            'deal with divided by 0
+            If openprice = 0 Then
+                percentchange = (yearlychange / 0.0000001) * 100
+            Else:
+                percentchange = (yearlychange / openprice) * 100
+            
+            End If
+            
+            
+            ' Set the Stock name
+            Stock_Name = ws.Cells(i, 1).Value
+            
+            ' Print the stock ticker in the Summary Table
+            ws.Range("I" & Summary_Table_Row).Value = Stock_Name
+            
+            ' Print the yearly change in the Summary Table
+            ws.Range("J" & Summary_Table_Row).Value = yearlychange
+            
+            'conditioanl color
+            If yearlychange > 0 Then
+                ws.Range("J" & Summary_Table_Row).Interior.ColorIndex = 4
+            ElseIf yearlychange < 0 Then
+                ws.Range("J" & Summary_Table_Row).Interior.ColorIndex = 3
+            Else
+                ws.Range("J" & Summary_Table_Row).Interior.ColorIndex = 2
+            End If
+            
+                
+            
+            ' Print the percentage change in the Summary Table
+            ws.Range("K" & Summary_Table_Row).Value = percentchange
+            
+            ' Print the Stock Amount to the Summary Table
+            ws.Range("L" & Summary_Table_Row).Value = Stock_Total
+            
+            ' Add one to the summary table row
+            Summary_Table_Row = Summary_Table_Row + 1
+            
+            
+            ' Reset the Stock Total
+            Stock_Total = 0
+            openprice = ws.Cells(i + 1, 3)
+
+        End If
+    
+        Next i
+    
+    
+        ' Greatest % increase
+        greatest_increase = WorksheetFunction.Max(ws.Range("K2:K" & Summary_Table_Row))
+        ws.Cells(2, 17).Value = greatest_increase
+        
+        greatest_increase_row = WorksheetFunction.Match(greatest_increase, ws.Range("K1:K" & Summary_Table_Row), 0)
+        ws.Cells(2, 16).Value = ws.Cells(greatest_increase_row, 9).Value
+        
+        
+        
+        ' Greatest % decrease
+        greatest_decrease = WorksheetFunction.Min(ws.Range("K2:K" & Summary_Table_Row))
+        ws.Cells(3, 17).Value = greatest_decrease
+        
+        greatest_decrease_row = WorksheetFunction.Match(greatest_decrease, ws.Range("K1:K" & Summary_Table_Row), 0)
+        ws.Cells(3, 16).Value = ws.Cells(greatest_decrease_row, 9).Value
+        
+        
+        ' Greatest total volumn
+        greatest_total = WorksheetFunction.Max(ws.Range("L2:L" & Summary_Table_Row))
+        ws.Cells(4, 17).Value = greatest_total
+        
+        greatest_total_row = WorksheetFunction.Match(greatest_total, ws.Range("L1:L" & Summary_Table_Row), 0)
+        ws.Cells(4, 16).Value = ws.Cells(greatest_total_row, 9).Value
+        
+        
+    Next ws
+    
+  
+End Sub
