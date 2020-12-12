@@ -56,5 +56,51 @@ def get_stations():
     conn.close()
     return jsonify(json.loads(station.to_json(orient="records")))
 
+@app.route("/api/v1.0/tobs")
+def tobs():
+    query = """
+        SELECT
+            m.date,
+            m.prcp,
+            m.tobs,
+            s.station,
+            s.name
+        FROM
+            measurement m
+            join station s on m.station = s.station
+        WHERE
+            date >= (
+                        SELECT
+                        date(MAX(date), '-365 day')
+                        FROM
+                            measurement
+                    )
+        ORDER BY
+            date
+        """
+    conn = engine.connect()
+    combined = pd.read_sql(query, con=conn)
+    conn.close()
+    return jsonify(json.loads(combined.to_json(orient="records")))
+
+
+@app.route("/api/v1.0/<start>/<end>")
+def to_date(start,end):
+    query = f"""
+        SELECT
+            MIN(prcp),
+            AVG(prcp),
+            MAX(prcp)
+        FROM
+            measurement
+        WHERE
+            (date >= {start}) and (date <={end})
+        """
+    conn = engine.connect()
+    date = pd.read_sql(query, con=conn)
+    conn.close()
+    return jsonify(json.loads(date.to_json(orient="records")))
+
+    
 if __name__ == "__main__":
     app.run(debug=True)
