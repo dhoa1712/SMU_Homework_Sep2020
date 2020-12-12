@@ -88,9 +88,9 @@ def tobs():
 def to_date(start,end):
     query = f"""
         SELECT
-            MIN(prcp),
-            AVG(prcp),
-            MAX(prcp)
+            MIN(tobs) as min_tobs,
+            AVG(tobs) as avg_tobs,
+            MAX(tobs) as max_tobs
         FROM
             measurement
         WHERE
